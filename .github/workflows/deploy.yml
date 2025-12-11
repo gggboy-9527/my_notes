@@ -2,7 +2,9 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main  # 当推送到 main 分支时触发
+  workflow_dispatch:  # 允许手动触发
 
 permissions:
   contents: read
@@ -10,9 +12,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
-  cancel-in-progress: true
-
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -24,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies
