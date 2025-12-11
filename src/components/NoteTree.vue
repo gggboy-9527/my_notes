@@ -47,38 +47,35 @@ const treeData = computed(() => {
 })
 
 function convertTreeToNaiveFormat(tree) {
+  console.log('=== convertTreeToNaiveFormat 开始 ===')
+  console.log('输入 tree:', tree)
+  console.log('tree 类型:', typeof tree)
+  console.log('tree 是否为 Proxy:', tree && typeof tree === 'object' && '__v_raw' in tree)
+  
   const result = []
   
-  if (!tree || typeof tree !== 'object') {
-    console.warn('convertTreeToNaiveFormat: tree 无效', tree)
-    return result
-  }
-  
-  Object.keys(tree).forEach(key => {
-    const item = tree[key]
+  try {
+    // 如果是 Proxy，获取原始值
+    const rawTree = tree && tree.__v_raw ? tree.__v_raw : tree
+    console.log('原始 tree:', rawTree)
     
-    if (!item) {
-      return
+    if (!rawTree || typeof rawTree !== 'object') {
+      console.warn('tree 无效')
+      return result
     }
     
-    console.log(`处理项: ${key}`, item)
-    
-    if (item.type === 'file') {
-      // 直接的文件项
-      result.push({
-        key: item.path,
-        label: item.name,
-        isLeaf: true
-      })
-    } else if (item.type === 'dir') {
-      // 目录项，需要递归处理子节点
-      const children = []
+    // 尝试直接使用 for...in
+    for (const key in rawTree) {
+      console.log(`处理键: ${key}`)
+      const item = rawTree[key]
+      console.log(`值:`, item)
       
-      // 处理目录下的文件列表（在 children 对象中）
-      if (item.children && typeof item.children === 'object') {
-        // 先处理 children 中的 files
-        if (item.children.files && Array.isArray(item.children.files)) {
-          console.log(`  找到 ${item.children.files.length} 个文件`)
+      if (item && item.type === 'dir') {
+        console.log(`发现目录: ${key}`)
+        const children = []
+        
+        // 处理文件
+        if (item.children && item.children.files) {
           item.children.files.forEach(file => {
             children.push({
               key: file.path,
@@ -88,67 +85,20 @@ function convertTreeToNaiveFormat(tree) {
           })
         }
         
-        // 再处理 children 中的子目录（排除 files 属性）
-        Object.keys(item.children).forEach(childKey => {
-          if (childKey !== 'files') {
-            const childItem = item.children[childKey]
-            if (childItem && childItem.type === 'dir') {
-              const subChildren = convertTreeToNaiveFormat({ [childKey]: childItem })
-              if (subChildren.length > 0) {
-                children.push(...subChildren)
-              }
-            }
-          }
-        })
-      }
-      
-      // 处理目录本身的 files（如果有）
-      if (item.files && Array.isArray(item.files)) {
-        console.log(`  目录本身有 ${item.files.length} 个文件`)
-        item.files.forEach(file => {
-          children.push({
-            key: file.path,
-            label: file.name,
-            isLeaf: true
-          })
-        })
-      }
-      
-      console.log(`  目录 ${key} 共有 ${children.length} 个子项`)
-      
-      result.push({
-        key: `dir-${key}`,
-        label: item.name || key,
-        children: children.length > 0 ? children : [],
-        isLeaf: false
-      })
-    } else if (item.files && Array.isArray(item.files)) {
-      // 当前层级有文件列表（根目录的文件）
-      item.files.forEach(file => {
         result.push({
-          key: file.path,
-          label: file.name,
-          isLeaf: true
+          key: `dir-${key}`,
+          label: item.name || key,
+          children: children,
+          isLeaf: false
         })
-      })
-    } else if (typeof item === 'object') {
-      // 可能是嵌套的目录结构，但没有明确的 type
-      // 检查是否有 children 或 files
-      if (item.children || item.files) {
-        const children = convertTreeToNaiveFormat(item)
-        if (children.length > 0) {
-          result.push({
-            key: `dir-${key}`,
-            label: key,
-            children: children,
-            isLeaf: false
-          })
-        }
       }
     }
-  })
+  } catch (err) {
+    console.error('转换失败:', err)
+  }
   
-  console.log('convertTreeToNaiveFormat 返回结果:', result)
+  console.log('=== convertTreeToNaiveFormat 结束 ===')
+  console.log('返回结果:', result)
   return result
 }
 
