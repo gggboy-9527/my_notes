@@ -2,10 +2,14 @@
   <Layout>
     <template #sidebar>
       <n-spin :show="notesStore.loading">
-        <NoteTree :tree="notesStore.notesTree" />
+        <!-- 同样添加这层包装 -->
+        <template v-if="!notesStore.loading">
+          <NoteTree :tree="notesStore.notesTree" />
+        </template>
       </n-spin>
     </template>
     
+    <!-- 右侧内容保持不变 -->
     <div class="note-detail">
       <n-spin :show="loading">
         <div v-if="error" class="error-container">

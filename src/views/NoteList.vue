@@ -1,35 +1,44 @@
 <template>
   <Layout>
     <template #sidebar>
-      <n-spin :show="loading">
-        <div v-if="error" class="error-message">
-          <n-alert type="error" :title="error" />
-          <n-button
-            type="primary"
-            style="margin-top: 16px"
-            @click="loadNotes"
-          >
-            重试
-          </n-button>
-        </div>
-        <div v-else-if="!hasNotes" class="empty-state">
-          <n-empty description="未找到笔记索引">
-            <template #description>
-              <div>
-                <p>未找到笔记索引文件 (index.json)</p>
-                <p style="font-size: 12px; color: #999; margin-top: 8px;">
-                  请在笔记仓库根目录创建 index.json 文件
-                </p>
-              </div>
-            </template>
-            <template #extra>
-              <n-button size="small" @click="loadNotes">
-                刷新
-              </n-button>
-            </template>
-          </n-empty>
-        </div>
-        <NoteTree v-else :tree="notesTree" />
+      <n-spin :show="notesStore.loading">
+        <!-- 关键：根据 store 的状态显示不同内容 -->
+        <template v-if="notesStore.error">
+          <div class="error-message">
+            <n-alert type="error" :title="notesStore.error" />
+            <n-button
+              type="primary"
+              style="margin-top: 16px"
+              @click="notesStore.loadNotes"
+            >
+              重试
+            </n-button>
+          </div>
+        </template>
+        
+        <template v-else-if="!notesStore.loading && Object.keys(notesStore.notesTree).length === 0">
+          <div class="empty-state">
+            <n-empty description="未找到笔记索引">
+              <template #description>
+                <div>
+                  <p>未找到笔记索引文件 (index.json)</p>
+                  <p style="font-size: 12px; color: #999; margin-top: 8px;">
+                    请在笔记仓库根目录创建 index.json 文件
+                  </p>
+                </div>
+              </template>
+              <template #extra>
+                <n-button size="small" @click="notesStore.loadNotes">
+                  刷新
+                </n-button>
+              </template>
+            </n-empty>
+          </div>
+        </template>
+        
+        <template v-else-if="!notesStore.loading">
+          <NoteTree :tree="notesStore.notesTree" />
+        </template>
       </n-spin>
     </template>
     
@@ -56,23 +65,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useNotesStore } from '@/stores/notes'
 import Layout from '@/components/Layout.vue'
 import NoteTree from '@/components/NoteTree.vue'
 import { NSpin, NAlert, NButton, NEmpty, NResult, NIcon } from 'naive-ui'
 
 const notesStore = useNotesStore()
-const { notesTree, loading, error, loadNotes } = notesStore
-
-const hasNotes = computed(() => {
-  const keys = Object.keys(notesTree)
-  console.log('hasNotes 检查:', keys.length, notesTree)
-  return keys.length > 0
-})
 
 onMounted(() => {
-  loadNotes()
+  console.log('NoteList 组件挂载，开始加载笔记')
+  notesStore.loadNotes()
 })
 </script>
 
@@ -93,4 +96,3 @@ onMounted(() => {
   text-align: center;
 }
 </style>
-
