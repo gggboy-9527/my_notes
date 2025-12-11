@@ -156,9 +156,13 @@ node scripts/generate-index.js
    - 开发测试：`npm run dev`
 
 3. **部署代码仓库**：
-   - 构建项目：`npm run build`
-   - 将 `dist` 目录内容推送到 GitHub Pages
-   - 或使用 GitHub Actions 自动部署
+   - **推荐**：使用 GitHub Actions 自动部署（已配置）
+     - 推送代码到 GitHub：`git push origin main`
+     - 在仓库 Settings → Pages 中启用 GitHub Actions 作为部署源
+     - 详细说明请查看 [DEPLOY.md](DEPLOY.md)
+   - **手动部署**：
+     - 构建项目：`npm run build`
+     - 将 `dist` 目录内容推送到 GitHub Pages
 
 ### 日常使用
 
